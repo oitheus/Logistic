@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Tarefas - Logística</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">Gerenciador de Tarefas - 01/08/2025</h1>
+        
+        <!-- Formulário para adicionar tarefas -->
+        <div class="flex flex-col gap-4 mb-4">
+            <input 
+                id="driverInput" 
+                type="text" 
+                placeholder="Nome do motorista" 
+                class="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <input 
+                id="plateInput" 
+                type="text" 
+                placeholder="Matrícula do carro (ex.: ABC-1234)" 
+                class="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <button 
+                onclick="addTask()" 
+                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            >
+                Adicionar Tarefa
+            </button>
+        </div>
+        
+        <!-- Lista de tarefas -->
+        <ul id="taskList" class="space-y-2">
+            <!-- Tarefas serão inseridas aqui dinamicamente -->
+        </ul>
+    </div>
+
+    <script>
+        // Carrega tarefas do localStorage ao iniciar
+        document.addEventListener('DOMContentLoaded', loadTasks);
+
+        function addTask() {
+            const driverInput = document.getElementById('driverInput');
+            const plateInput = document.getElementById('plateInput');
+            const driver = driverInput.value.trim();
+            const plate = plateInput.value.trim().toUpperCase();
+
+            if (driver === '' || plate === '') {
+                alert('Por favor, preencha o nome do motorista e a matrícula do carro!');
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                driver: driver,
+                plate: plate,
+                date: '01/08/2025', // Data fixa da planilha
+                completed: false
+            };
+
+            // Adiciona a tarefa ao localStorage
+            saveTask(task);
+
+            // Renderiza a tarefa na lista
+            renderTask(task);
+
+            // Limpa os inputs
+            driverInput.value = '';
+            plateInput.value = '';
+        }
+
+        function renderTask(task) {
+            const taskList = document.getElementById('taskList');
+            const li = document.createElement('li');
+            li.className = `flex justify-between items-center p-2 border rounded-lg ${task.completed ? 'bg-green-100' : 'bg-gray-50'}`;
+            li.dataset.id = task.id;
+
+            li.innerHTML = `
+                <div class="${task.completed ? 'line-through text-gray-500' : ''}">
+                    <span class="font-semibold">${task.driver}</span> - ${task.plate} (${task.date})
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleTask(${task.id})" class="text-green-500 hover:text-green-700">
+                        ${task.completed ? 'Desmarcar' : 'Concluir'}
+                    </button>
+                    <button onclick="deleteTask(${task.id})" class="text-red-500 hover:text-red-700">Excluir</button>
+                </div>
+            `;
+
+            taskList.appendChild(li);
+        }
+
+        function saveTask(task) {
+            let tasks = getTasks();
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function getTasks() {
+            return JSON.parse(localStorage.getItem('tasks')) || [];
+        }
+
+        function loadTasks() {
+            const tasks = getTasks();
+            tasks.forEach(task => {
+                if (task.date === '01/08/2025') { // Filtra pela data da planilha
+                    renderTask(task);
+                }
+            });
+        }
+
+        function toggleTask(id) {
+            let tasks = getTasks();
+            tasks = tasks.map(task => {
+                if (task.id === id) {
+                    task.completed = !task.completed;
+                }
+                return task;
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            refreshTaskList();
+        }
+
+        function deleteTask(id) {
+            let tasks = getTasks();
+            tasks = tasks.filter(task => task.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            refreshTaskList();
+        }
+
+        function refreshTaskList() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            loadTasks();
+        }
+    </script>
+</body>
+</html>
